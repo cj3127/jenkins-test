@@ -1,7 +1,7 @@
 pipeline {
     agent any  
     environment {
-        HARBOR_ADDR = "harbor.test.com"
+        HARBOR_ADDR = "192.168.121.106"
         HARBOR_PROJECT = "library"
         IMAGE_NAME = "nginx"
         IMAGE_TAG = "${BUILD_NUMBER}" 
@@ -9,12 +9,6 @@ pipeline {
         K8S_NAMESPACE = "default"
     }
     stages {
-        stage("拉取代码") {
-            steps {
-                echo "===== 拉取Git代码 ====="
-                git url: "https://github.com/cj3127/jenkins-test.git", branch: "main" 
-            }
-        }
 
         stage("构建Docker镜像") {
             steps {
