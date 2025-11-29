@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: welcome-nginx-cm
+  namespace: default
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head><title>Welcome</title></head>
+    <body><h1>welcome to test.com</h1></body>
+    </html>
