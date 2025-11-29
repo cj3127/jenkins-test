@@ -31,10 +31,10 @@ pipeline {
         stage("部署到K8s集群") {
             steps {
                 echo "===== 部署到K8s集群 ====="
+                sh "kubectl apply -f k8s/nginx-welcome-cm.yaml -n ${K8S_NAMESPACE}"
                 sh "sed -i 's|harbor.test.com/library/nginx:latest|${FULL_IMAGE_NAME}|g' k8s/nginx-deployment.yaml"
                 sh "kubectl apply -f k8s/nginx-deployment.yaml -n ${K8S_NAMESPACE}"
                 sh "kubectl rollout status deployment/nginx-deployment -n ${K8S_NAMESPACE}"
-                sh "kubectl apply -f k8s/nginx-welcome-cm.yaml -n ${K8S_NAMESPACE}"
             }
         }
 
