@@ -12,7 +12,7 @@ pipeline {
         stage("拉取代码") {
             steps {
                 echo "===== 拉取Git代码 ====="
-                git url: "https://gitee.com/your-name/nginx-test.git", branch: "main"  # 替换为你的Git仓库地址
+                git url: "https://github.com/cj3127/jenkins-test.git", branch: "main"  # 替换为你的Git仓库地址
             }
         }
 
