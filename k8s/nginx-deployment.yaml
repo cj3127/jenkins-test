@@ -28,8 +28,8 @@ spec:
       - name: accesslog
         persistentVolumeClaim: { claimName: nginx-accesslog-pvc }
       # 反亲和性：确保副本分布在不同node
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector: { matchExpressions: [{ key: app, operator: In, values: [nginx] }] }
-            topologyKey: kubernetes.io/hostname
+      #affinity:
+      #  podAntiAffinity:
+      #    requiredDuringSchedulingIgnoredDuringExecution:
+      #    - labelSelector: { matchExpressions: [{ key: app, operator: In, values: [nginx] }] }
+      #      topologyKey: kubernetes.io/hostname
