@@ -21,16 +21,17 @@ spec:
     spec:
       imagePullSecrets:
       - name: harbor-registry-secret  # 拉取Harbor私有镜像的密钥
-      # 启用反亲和性：强制3副本分布在不同节点
       affinity:
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values: [nginx]
-            topologyKey: kubernetes.io/hostname  # 按节点维度隔离
+          preferredDuringSchedulingIgnoredDuringExecution:  # 软规则：优先分散，不匹配也能调度
+          - weight: 100  # 优先级（越高越优先）
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: [nginx]
+              topologyKey: kubernetes.io/hostname
       containers:
       - name: nginx
         image: harbor.test.com/library/nginx:latest
