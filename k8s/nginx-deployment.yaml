@@ -4,32 +4,73 @@ metadata:
   name: nginx-deployment
   namespace: default
 spec:
-  replicas: 3  # 3副本分布在3个node
-  selector: { matchLabels: { app: nginx } }
+  replicas: 3  # 3副本，反亲和性确保分布在3个节点
+  selector:
+    matchLabels:
+      app: nginx
+  # 核心：滚动更新配置（无停机更新）
+  strategy:
+    type: RollingUpdate  # 明确指定滚动更新（默认就是，显式声明更清晰）
+    rollingUpdate:
+      maxSurge: 1        # 更新时最多超出1个副本（可设为百分比，如25%）
+      maxUnavailable: 0  # 更新时最多不可用0个副本（保证服务100%可用）
   template:
-    metadata: { labels: { app: nginx } }
+    metadata:
+      labels:
+        app: nginx
     spec:
-      imagePullSecrets: [{ name: harbor-registry-secret }]  # 拉取Harbor镜像
+      imagePullSecrets:
+      - name: harbor-registry-secret  # 拉取Harbor私有镜像的密钥
+      # 启用反亲和性：强制3副本分布在不同节点
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values: [nginx]
+            topologyKey: kubernetes.io/hostname  # 按节点维度隔离
       containers:
       - name: nginx
         image: harbor.test.com/library/nginx:latest
-        ports: [{ containerPort: 80 }]
+        ports:
+        - containerPort: 80
+        # 挂载ConfigMap（欢迎页）和PVC（日志）
         volumeMounts:
-        - name: welcome-page  # 挂载欢迎页CM
-          mountPath: /usr/share/nginx/html
-        - name: accesslog     # 挂载PVC存日志
+        - name: welcome-page
+          mountPath: /usr/share/nginx/html/index.html  # 精准挂载index.html，避免覆盖整个目录
+          subPath: index.html
+        - name: accesslog
           mountPath: /var/log/nginx
-        resources:  # 资源限制
-          limits: { cpu: 500m, memory: 512Mi }
-          requests: { cpu: 200m, memory: 256Mi }
+        # 资源限制（避免抢占节点资源）
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        # 健康检查（滚动更新依赖，确保Pod就绪后再替换旧Pod）
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
       volumes:
       - name: welcome-page
-        configMap: { name: welcome-nginx-cm, items: [{ key: index.html, path: index.html }] }
+        configMap:
+          name: welcome-nginx-cm
+          items:
+          - key: index.html
+            path: index.html
       - name: accesslog
-        persistentVolumeClaim: { claimName: nginx-accesslog-pvc }
-      # 反亲和性：确保副本分布在不同node
-      #affinity:
-      #  podAntiAffinity:
-      #    requiredDuringSchedulingIgnoredDuringExecution:
-      #    - labelSelector: { matchExpressions: [{ key: app, operator: In, values: [nginx] }] }
-      #      topologyKey: kubernetes.io/hostname
+        persistentVolumeClaim:
+          claimName: nginx-accesslog-pvc
