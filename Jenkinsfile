@@ -1,7 +1,7 @@
 pipeline {
     agent any  
     environment {
-        HARBOR_ADDR = "192.168.121.106"
+        HARBOR_ADDR = "harbor.test.com"
         HARBOR_PROJECT = "library"
         IMAGE_NAME = "nginx"
         IMAGE_TAG = "${BUILD_NUMBER}" 
